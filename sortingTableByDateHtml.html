@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      td,
+      th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+      }
+
+      tr:nth-child(even) {
+        background-color: #dddddd;
+      }
+    </style>
+    <style>
+      body {
+        font-family: Arial;
+      }
+
+      /* Style the tab */
+      .tab {
+        overflow: hidden;
+        border: 1px solid #ccc;
+        background-color: #f1f1f1;
+      }
+
+      /* Style the buttons inside the tab */
+      .tab button {
+        background-color: inherit;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: 0.3s;
+        font-size: 17px;
+      }
+
+      /* Change background color of buttons on hover */
+      .tab button:hover {
+        background-color: #ddd;
+      }
+
+      /* Create an active/current tablink class */
+      .tab button.active {
+        background-color: #ccc;
+      }
+
+      /* Style the tab content */
+      .tabcontent {
+        display: none;
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-top: none;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.css"
+    />
+  </head>
+  <body>
+    <h3 style="color: blue">Copy "tbody" and paste here</h3>
+    <textarea
+      name="rawDataTable"
+      id="rawDataTable"
+      style="width: 100%"
+      cols="30"
+      rows="10"
+    ></textarea>
+
+    <div class="tab">
+      <button class="tablinks" onclick="openTab(event, 'Origin')">
+        <h5 style="margin: 0px; color: red">Origin Table</h5>
+      </button>
+      <button class="tablinks" onclick="openTab(event, 'Result')">
+        <h5 style="margin: 0px; color: green">Sort Table</h5>
+      </button>
+    </div>
+
+    <div id="Origin" class="tabcontent">
+      <table id="originTable"></table>
+    </div>
+
+    <div id="Result" class="tabcontent">
+      <table id="resultTable"></table>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script>
+      $("#rawDataTable").change(function () {
+        var rawDataTable = $("#rawDataTable").val();
+        $("#originTable").html(rawDataTable);
+      });
+    </script>
+
+    <script>
+      function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+        if (tabName == "Result") {
+          let rowData = getRows();
+          let rowSorted = sortDataByDate(rowData);
+          arrToTable(rowSorted);
+        }
+      }
+
+      function getRows() {
+        var colCount = $("#originTable > tbody > tr:first > td").length;
+        var rows = [];
+        var rowId = 0;
+        $("#originTable > tbody  > tr").each(function () {
+          var cell = [];
+          if (isAcceptRow(this)) {
+            for (var i = 0; i < colCount; i++) {
+              let str = $(this).find("td").eq(i).html();
+              let strWithoutHTmlTags = str.replace(/(<([^>]+)>)/gi, "");
+              if (i == 0) {
+                cell[i] = convertDateFormat(strWithoutHTmlTags);
+              } else {
+                cell[i] = strWithoutHTmlTags;
+              }
+            }
+            rows[rowId] = cell;
+            rowId++;
+          }
+        });
+        return rows;
+      }
+
+      function isAcceptRow(row) {
+        let col1 = $(row).find("td").eq(1).html();
+        return Number.parseInt(col1);
+      }
+
+      function convertDateFormat(originDate) {
+        let arrayDate = originDate.split("/");
+        let day = arrayDate[0];
+        let month = arrayDate[1];
+        let year = Number.parseInt("25" + arrayDate[2]) - 543;
+        var date = year + "-" + month + "-" + day;
+        return date;
+      }
+
+      function sortDataByDate(rowData) {
+        let arr = Object.values(rowData);
+        let sorted = arr.sort(function (a, b) {
+          return new Date(a[0]).getTime() - new Date(b[0]).getTime();
+        });
+        return sorted;
+      }
+
+      function arrToTable(arr) {
+        var html = "<tbody>";
+        arr.forEach((row) => {
+          html += "<tr>";
+          for (let index = 0; index < row.length; index++) {
+            let element = row[index];
+            html += "<td>" + element + "</td>";
+          }
+          html += "</tr>";
+        });
+        html += "</tbody>";
+        $("#resultTable").html(html);
+      }
+    </script>
+  </body>
+</html>
